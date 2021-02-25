@@ -16,24 +16,21 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = PERMISSION_CLASSES
 
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        save_params = {
+            'author': self.request.user
+        }
+        serializer.save(**save_params)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = PERMISSION_CLASSES
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id', '')
         post = get_object_or_404(Post, pk=post_id)
-        all_comments_of_post = post.comments.all()
-        return all_comments_of_post
+        return post.comments.all()
 
     def perform_create(self, serializer):
         save_params = {
